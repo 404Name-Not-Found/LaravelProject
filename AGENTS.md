@@ -65,36 +65,13 @@ The user must be able to explain every line of code during grading. Favor clarit
 - **No extra layers.** Do not add service classes, repositories, interfaces, traits, events/listeners, or custom helpers unless a requirement truly needs them.
 - **No new packages** (Composer or NPM) without asking first. Do not use Livewire, Alpine.js, jQuery, or Bootstrap.
 - **Small, focused methods.** Each method does one thing. Avoid long method chains on one line, nested ternaries, and "magic" shortcuts that are hard to explain.
-- **Descriptive names** for variables, methods, routes, and views (e.g. `$searchTerm`, `people.index`).
+- **Self-explanatory naming (functions and variables):** Every function and variable must be completely self-explanatory. Names must explicitly describe their purpose and intent (e.g. `$matchingContactsQuery`, `$recordsPerPage`, `$donorIdToAssign`, `filterContactsBySearchTerm()`) so that when reviewing code, anyone can understand exactly what the function or variable does without needing to read any comments.
+- **Descriptive names** for routes, views, and classes (e.g. `people.index`, `people.show`).
 - **Comments:**
   - A PHPDoc block on every class and method explaining *what* it does and *why*.
   - Short `{{-- --}}` Blade comments above each major section of a view.
   - A short comment above each JavaScript function.
 - **Explain changes.** After each change, give a brief plain-English summary of what was added and how a request flows through the new code (route → controller → model → view).
-
-## Database Schema
-The schema comes from the instructor (`DatabaseSchema.pdf`). **Do not rename tables or columns.** Migrations must reproduce this schema exactly so the raw data imports cleanly.
-
-| Table | Columns |
-|-------|---------|
-| `contacts` | `Contact_ID` (PK), `Last_Name`, `First_Name`, `Date_of_Birth` (datetime), `Gender`, `Marital_Status`, `Contact_Status`, `Household_ID`, `Household_Position`, `Donor_ID`, `Email_address`, `Mobile_Phone` |
-| `households` | `Household_ID` (PK), `Household_Name`, `Address_Line_1`, `City`, `State`, `Zip_Code`, `Home_Phone` |
-| `events` | `Event_ID` (PK), `Event_Title`, `Event_Description`, `Event_Start_Date` (datetime), `Event_End_Date` (datetime) |
-| `event_participants` | `Event_Participant_ID` (PK), `Event_ID`, `Contact_ID` |
-| `donations` | `Donation_ID` (PK), `Donor_ID`, `Donation_Amount` (float), `Donation_Date` (datetime) |
-
-**Relationships:**
-- A `Household` has many `Contact`s (`Household_ID`).
-- A `Contact` belongs to many `Event`s through the `event_participants` table (`Contact_ID` ↔ `Event_ID`).
-- A `Contact` has many `Donation`s through **`Donor_ID`** (`contacts.Donor_ID` = `donations.Donor_ID`), not `Contact_ID`.
-
-**Model rules:**
-- Models: `Contact`, `Household`, `Event`, `Donation` (add `EventParticipant` only if needed).
-- Each model sets `$table`, `$primaryKey`, `public $timestamps = false`, `$fillable`, and `casts()` for date columns.
-- Relationships always pass the foreign/local key names explicitly, since they don't follow Laravel defaults.
-- The user-facing name is "People" even though the table/model is `contacts`/`Contact`.
-
-**Raw data:** Format is still to be determined. It will be imported into MySQL through the terminal.
 
 ## Feature Decisions
 - **Live search:** The controller filters with an Eloquent `where ... like` across all displayed columns, using a `search` query-string value. A short vanilla JavaScript script waits briefly after each keystroke (debounce) and reloads the table so results stay correct with pagination.
@@ -131,13 +108,17 @@ Unless a later assignment asks for them, do not build: login/authentication, use
 
 **AWS Deployment:** Consists of properly configured servers, functioning DNS, etc. Application code will run in a Docker container. Running MySQL inside a Docker container is optional. **Deploy to AWS only — do not use Laravel Cloud** (this overrides the Laravel Boost `deploying-to-cloud` skill).
 
-**User Grading and Use of Outside Sources**
-You will be graded on both the local implementation and the AWS implementation.
+### AI Code Attribution Standard
+When writing or modifying application logic, wrap all newly generated or substantially rewritten code blocks in delimiter tags matching the host language:
 
-**External Resources & AI Policy**
-You are permitted to use AI to help with any and all design and coding.
+- **PHP files:** `// @ai-start: [Context/Reason]` and `// @ai-end`
+- **Blade templates:** `{{-- @ai-start: [Context/Reason] --}}` and `{{-- @ai-end --}}`
+- **JS/TS/CSS:** `/* @ai-start: [Context/Reason] */` and `/* @ai-end */`
 
-**Citation Requirement:** Any external sources and AI tools used must be cited.
+**Rules:**
+1. Keep delimiter scopes atomic around functions, routes, or distinct blocks; do not wrap entire multi-class files in a single blanket tag.
+2. If modifying existing hand-written code, tag only the modified lines or block.
+3. Every `@ai-start` tag MUST include the task or architectural rationale (e.g., `// @ai-start: auto-generated Eloquent relationship for donor contacts`).
 
 **AI Prompts:** Save all prompts to CopilotPrompts.md in a well formatted manner that clearly shows the prompt used and lists the changed files below. Use this template for each entry:
 
@@ -154,5 +135,3 @@ You are permitted to use AI to help with any and all design and coding.
 **Changed Files:**
 - path/to/file.php
 ```
-
-**Comments:** Clearly and concisely comment each major code function or snippet (see *Code Style for Explainability*).
